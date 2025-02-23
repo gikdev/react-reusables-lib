@@ -15,6 +15,9 @@ export const showFaDateProperly = (input?: string | null) =>
 export const showFaTimeProperly = (input?: string | null) =>
   input ? new PersianDate(input).toLocaleTimeString("fa-IR") : "-"
 
+export const showFaDateFullProperly = (input?: string | null) =>
+  input ? new PersianDate(input).toLocaleString("fa-IR") : "-"
+
 export function sumTimes(times: (string | null)[], config = { includeDays: false }): string {
   let td = 0
   let th = 0
@@ -199,3 +202,72 @@ export function isTheSameDay(from: string | Date, to: string | Date): boolean {
     fromDate.getDate() === toDate.getDate()
   )
 }
+
+export function toShamsiISO(date: Date) {
+  // Convert Gregorian date to Shamsi (Solar Hijri) date
+  const gregorianYear = date.getFullYear()
+  const gregorianMonth = date.getMonth() + 1 // Months are 0-indexed in JavaScript
+  const gregorianDay = date.getDate()
+
+  // Shamsi epoch (March 21, 622 Gregorian)
+  const shamsiEpoch = 622
+  const shamsiMonthDays = [31, 31, 31, 31, 31, 31, 30, 30, 30, 30, 30, 29] // Days in each Shamsi month
+
+  // Calculate the total days since the Shamsi epoch
+  let totalDays = Math.floor((gregorianYear - shamsiEpoch) * 365.25)
+
+  // Add days for each month in the current year
+  for (let i = 0; i < gregorianMonth - 1; i++) {
+    totalDays += shamsiMonthDays[i]
+  }
+
+  // Add the current day
+  totalDays += gregorianDay
+
+  // Adjust for leap years in the Shamsi calendar
+  let shamsiYear = Math.floor(totalDays / 365.25)
+  let remainingDays = totalDays % 365.25
+
+  // Determine the Shamsi month and day
+  let shamsiMonth = 0
+  let shamsiDay = 0
+  for (let i = 0; i < shamsiMonthDays.length; i++) {
+    if (remainingDays <= shamsiMonthDays[i]) {
+      shamsiMonth = i + 1
+      shamsiDay = Math.floor(remainingDays)
+      break
+    }
+    remainingDays -= shamsiMonthDays[i]
+  }
+
+  // Handle leap years (29 or 30 days in the last month)
+  if (shamsiMonth === 12 && shamsiDay === 30 && !isShamsiLeapYear(shamsiYear)) {
+    shamsiMonth = 1
+    shamsiDay = 1
+    shamsiYear += 1
+  }
+
+  const hours = String(date.getHours()).padStart(2, "0")
+  const minutes = String(date.getMinutes()).padStart(2, "0")
+  const seconds = String(date.getSeconds()).padStart(2, "0")
+
+  return `${shamsiYear}-${String(shamsiMonth).padStart(2, "0")}-${String(shamsiDay).padStart(2, "0")}T${hours}:${minutes}:${seconds}Z`
+}
+
+export function isShamsiLeapYear(year: number) {
+  // Shamsi leap years follow a 33-year cycle
+  const cycle = year % 33
+
+  return (
+    cycle === 1 ||
+    cycle === 5 ||
+    cycle === 9 ||
+    cycle === 13 ||
+    cycle === 17 ||
+    cycle === 22 ||
+    cycle === 26 ||
+    cycle === 30
+  )
+}
+
+export const showShamsiISO = (str: string) => str.replace(/T/g, " ").replace(/\-/g, "/")
