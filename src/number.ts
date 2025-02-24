@@ -30,3 +30,5 @@ export function persianizeNumber(number: string | number, replaceDotsToo = true)
 
   return result
 }
+
+export const noNaN = (input?: number | null) => (input && !Number.isNaN(input) ? input : 0)

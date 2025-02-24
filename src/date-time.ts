@@ -1,4 +1,4 @@
-import { englifyNumber } from "./number"
+import { englifyNumber, noNaN } from "./number"
 
 export class PersianDate extends Date {
   toLocaleDateString = () => super.toLocaleDateString("fa-IR")
@@ -105,10 +105,41 @@ export function parseDHHMMSSString(timeStr: string): UsefulTime {
   }
 }
 
+export function isUsefulEmpty(useful: UsefulTime) {
+  return useful.d === 0 && useful.h === 0 && useful.m === 0 && useful.s === 0
+}
+
+export function genEmptyUsefulObj(): UsefulTime {
+  return {
+    d: 0,
+    h: 0,
+    m: 0,
+    s: 0,
+  }
+}
+
+export function dateToUsefulObj(_date: Date | string) {
+  const date = new Date(_date)
+  const useful: UsefulTime = { d: 0, h: 0, m: 0, s: 0 }
+  useful.h = noNaN(date.getHours())
+  useful.m = noNaN(date.getMinutes())
+  useful.s = noNaN(date.getSeconds())
+  return useful
+}
+
+export function mixDateNUseful(date: Date, useful: UsefulTime) {
+  const year = date.getFullYear()
+  const month = (date.getMonth() + 1).toString().padStart(2, "0")
+  const day = date.getDate().toString().padStart(2, "0")
+
+  const iso = `${year}-${month}-${day}T${useful.h.toString().padStart(2, "0")}:${useful.m.toString().padStart(2, "0")}:${useful.s.toString().padStart(2, "0")}.000Z`
+  return iso
+}
+
 /** Converts a time object `{ d, h, m, s }` to a string `"D.HH:MM:SS"` */
-export function formatDHMSObject(timeObj: UsefulTime): string {
+export function formatDHMSObject(timeObj: UsefulTime, haveDay = true): string {
   const { d, h, m, s } = timeObj
-  const dayPart = `${d}.`
+  const dayPart = haveDay ? `${d}.` : ""
   const hourPart = String(h).padStart(2, "0")
 
   return `${dayPart}${hourPart}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`
@@ -270,4 +301,4 @@ export function isShamsiLeapYear(year: number) {
   )
 }
 
-export const showShamsiISO = (str: string) => str.replace(/T/g, " ").replace(/\-/g, "/")
+export const showShamsiISO = (str: string) => str.replace(/[TZ]/g, " ").replace(/\-/g, "/")
