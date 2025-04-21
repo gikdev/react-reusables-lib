@@ -1,16 +1,23 @@
 import { useCallback, useEffect, useState } from "react"
 
-export function useOnClickOutside<T extends HTMLElement = HTMLElement>(
-  ref: React.RefObject<T>,
+export function useOnClickOutside(
+  refs: Array<React.RefObject<HTMLElement | null>>,
   handler: (e: Event) => void,
 ) {
   useEffect(() => {
     const listener = (e: Event) => {
-      const el = ref?.current
+      let isOutside = true
 
-      if (!el || el.contains((e?.target as Node) || null)) return
+      for (const ref of refs) {
+        const el = ref?.current
 
-      handler(e)
+        if (el?.contains(e?.target as Node)) {
+          isOutside = false
+          break
+        }
+      }
+
+      if (isOutside) handler(e)
     }
 
     document.addEventListener("mousedown", listener)
@@ -21,7 +28,7 @@ export function useOnClickOutside<T extends HTMLElement = HTMLElement>(
       document.removeEventListener("touchstart", listener)
     }
     return cleanup
-  }, [ref, handler])
+  }, [refs, handler])
 }
 
 export function useRandomThing<T = string>(things: T[], interval = 1000) {

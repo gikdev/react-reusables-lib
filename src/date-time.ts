@@ -18,7 +18,13 @@ export const showFaTimeProperly = (input?: string | null) =>
 export const showFaDateFullProperly = (input?: string | null) =>
   input ? new PersianDate(input).toLocaleString("fa-IR") : "-"
 
-export function sumTimes(times: (string | null)[], config = { includeDays: false }): string {
+export function sumTimes(
+  times: (string | null)[],
+  config: {
+    includeDays?: boolean
+    hideSeconds?: boolean
+  } = { includeDays: false, hideSeconds: false },
+): string {
   let td = 0
   let th = 0
   let tm = 0
@@ -59,6 +65,9 @@ export function sumTimes(times: (string | null)[], config = { includeDays: false
   const addZero = (num: number) => num.toString().padStart(2, "0")
 
   if (config.includeDays) return `${td}.${addZero(th)}:${addZero(tm)}:${addZero(ts)}`
+  if (config.hideSeconds) {
+    return `${addZero(td * 24 + th)}:${addZero(tm)}`
+  }
 
   return `${addZero(td * 24 + th)}:${addZero(tm)}:${addZero(ts)}`
 }
